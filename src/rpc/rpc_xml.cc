@@ -573,10 +573,97 @@ RpcXml::cleanup() {
   delete (xmlrpc_env*)m_env;
 }
 
+static std::vector<std::string> untrusted_commands =
+{
+	"execute",
+	"execute.capture",
+	"execute.capture_nothrow",
+	"execute.nothrow",
+	"execute.nothrow.bg",
+	"execute.raw",
+	"execute.raw.bg",
+	"execute.raw_nothrow",
+	"execute.raw_nothrow.bg",
+	"execute.throw",
+	"execute.throw.bg",
+	"execute2",
+	"method.insert",
+	"method.redirect",
+	"method.set",
+	"method.set_key",
+	"schedule",
+	"schedule2",
+	"import",
+	"try_import",
+	"log.open_file",
+	"log.add_output",
+	"log.execute",
+	"log.vmmap.dump",
+	"log.xmlrpc",
+	"log.libtorrent",
+	"file.append",
+// old commands
+	"execute_capture",
+	"execute_capture_nothrow",
+	"execute_nothrow",
+	"execute_nothrow_bg",
+	"execute_raw",
+	"execute_raw_bg",
+	"execute_raw_nothrow",
+	"execute_raw_nothrow_bg",
+	"execute_throw",
+	"execute_throw_bg",
+	"system.method.insert",
+	"system.method.redirect",
+	"system.method.set",
+	"system.method.set_key",
+	"on_insert",
+	"on_erase",
+	"on_open",
+	"on_close",
+	"on_start",
+	"on_stop",
+	"on_hash_queued",
+	"on_hash_removed",
+	"on_hash_done",
+	"on_finished"
+};
+
+thread_local bool rpc::trustedXmlConnection = true;
+
+bool XmlRpc::set_trusted_connection( bool enabled )
+{
+	bool ret = XmlRpc::trustedXmlConnection;
+	XmlRpc::trustedXmlConnection = enabled;
+	return(ret);
+}
+
+bool XmlRpc::is_command_enabled( const char* const methodName )
+{
+	return( trustedXmlConnection ||
+		(std::find(untrusted_commands.begin(), untrusted_commands.end(), methodName) == untrusted_commands.end()) );
+}
+
+void xmlrpc_check_command(xmlrpc_env* const envP,
+	const char* const methodName,
+	xmlrpc_value* const paramArrayP,
+	void* const userData)
+{
+	if( !rpc::is_command_enabled( methodName ) )
+	{
+		xmlrpc_faultf(envP, "Command '%s' is not enabled for untrusted connections", methodName);
+	}
+}
+
 bool
-RpcXml::process(const char* inBuffer, uint32_t length, res_callback callback) {
+RpcXml::process(const char* inBuffer, uint32_t length, res_callback callback, bool trusted) {
   xmlrpc_env localEnv;
   xmlrpc_env_init(&localEnv);
+
+   trustedXmlConnection = trusted;
+
+  xmlrpc_registry_set_preinvoke_method(&localEnv, (xmlrpc_registry*)m_registry,
+    (xmlrpc_preinvoke_method) (trusted ? NULL : &xmlrpc_check_command), NULL);
 
   xmlrpc_mem_block* memblock = xmlrpc_registry_process_call(
     &localEnv, (xmlrpc_registry*)m_registry, nullptr, inBuffer, length);
@@ -589,6 +676,9 @@ RpcXml::process(const char* inBuffer, uint32_t length, res_callback callback) {
 
   xmlrpc_mem_block_free(memblock);
   xmlrpc_env_clean(&localEnv);
+
+  trustedXmlConnection = true;
+
   return result;
 }
 

@@ -27,17 +27,18 @@ bool
 RpcManager::dispatch(RPCType            type,
                      const char*        inBuffer,
                      uint32_t           length,
+                     bool               trusted,
                      IRpc::res_callback callback) {
   switch (type) {
     case RPCType::XML: {
       if (m_rpcProcessors[RPCType::XML]->is_valid()) {
         return m_rpcProcessors[RPCType::XML]->process(
-          inBuffer, length, callback);
+          inBuffer, length, trusted, callback);
       } else {
         const char* response =
           "<?xml version=\"1.0\"?><methodResponse><fault><value><string>XMLRPC "
           "not supported</string></value></fault></methodResponse>";
-        return callback(response, strlen(response));
+        return callback(response, strlen(response), trusted);
       }
     }
     case RPCType::JSON: {
@@ -48,7 +49,7 @@ RpcManager::dispatch(RPCType            type,
         const char* response =
           "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32601,\"message\":\"JSON-"
           "RPC not supported\"},\"id\":\"1\"}";
-        return callback(response, strlen(response));
+        return callback(response, strlen(response), trusted);
       }
     }
     default:

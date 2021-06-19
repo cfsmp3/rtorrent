@@ -30,6 +30,7 @@ public:
   bool dispatch(RPCType            type,
                 const char*        inBuffer,
                 uint32_t           length,
+                bool               trusted,
                 IRpc::res_callback callback);
 
   void initialize(slot_download fun_d,

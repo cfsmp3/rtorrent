@@ -142,6 +142,7 @@ cc_library(
         "//conditions:default": [
             "-lpthread",
             "-lstdc++",
+	    "-lstdc++fs"
         ],
     }),
     deps = [
