@@ -631,14 +631,14 @@ static std::vector<std::string> untrusted_commands =
 
 thread_local bool rpc::trustedXmlConnection = true;
 
-bool XmlRpc::set_trusted_connection( bool enabled )
+bool RpcXml::set_trusted_connection( bool enabled )
 {
 	bool ret = XmlRpc::trustedXmlConnection;
-	XmlRpc::trustedXmlConnection = enabled;
+	RpcXml::trustedXmlConnection = enabled;
 	return(ret);
 }
 
-bool XmlRpc::is_command_enabled( const char* const methodName )
+bool RpcXml::is_command_enabled( const char* const methodName )
 {
 	return( trustedXmlConnection ||
 		(std::find(untrusted_commands.begin(), untrusted_commands.end(), methodName) == untrusted_commands.end()) );

@@ -38,7 +38,7 @@ RpcManager::dispatch(RPCType            type,
         const char* response =
           "<?xml version=\"1.0\"?><methodResponse><fault><value><string>XMLRPC "
           "not supported</string></value></fault></methodResponse>";
-        return callback(response, strlen(response), trusted);
+        return callback(response, strlen(response), true);
       }
     }
     case RPCType::JSON: {
@@ -49,7 +49,7 @@ RpcManager::dispatch(RPCType            type,
         const char* response =
           "{\"jsonrpc\":\"2.0\",\"error\":{\"code\":-32601,\"message\":\"JSON-"
           "RPC not supported\"},\"id\":\"1\"}";
-        return callback(response, strlen(response), trusted);
+        return callback(response, strlen(response), true);
       }
     }
     default:

@@ -33,7 +33,7 @@
 
 namespace core {
 inline void dl_trigger_event(Download* download, const char* event_name) {
-  bool state = rpc::set_trusted_connection( true );
+  bool state = XmlRpc::set_trusted_connection( true );
   rpc::commands.call_catch(event_name, rpc::make_target(download), torrent::Object(), ("Event '"+std::string(event_name)+"' failed: ").c_str());
   rpc::set_trusted_connection( state );
 }
